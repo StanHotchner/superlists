@@ -1,7 +1,7 @@
-ÅäÖÃĞÂÍøÕ¾
+é…ç½®æ–°ç½‘ç«™
 ===========
 
-## ĞèÒª°²×°µÄ°ü£º
+## éœ€è¦å®‰è£…çš„åŒ…ï¼š
 
 nginx
 Python3
@@ -9,31 +9,31 @@ git
 pip
 virtualenv
 
-Ubuntu ÖĞµÄ°²×°ÃüÁî£º
+Ubuntu ä¸­çš„å®‰è£…å‘½ä»¤ï¼š
 sudo apt-get install nginx git python3 python3-pip
 sudo pip3 install virtualenv
 
-## ÅäÖÃnginx ĞéÄâÖ÷»ú:
+## é…ç½®nginx è™šæ‹Ÿä¸»æœº:
 
-* ²Î¿¼ nginx.template.conf
-* °Ñ SITENAME »»³ÉËùĞèµÄÓòÃû£¬ÀıÈç£ºsuperlists-staging.sunplus-prof.com
+* å‚è€ƒ nginx.template.conf
+* æŠŠ SITENAME æ¢æˆæ‰€éœ€çš„åŸŸåï¼Œä¾‹å¦‚ï¼šsuperlists-staging.sunplus-prof.com
 
-## upstart ÈÎÎñ
+## upstart ä»»åŠ¡
 
-* ²Î¿¼ gunicorn-upstart.template.conf
-* °Ñ SITENAME »»³ÉËùĞèµÄÓòÃû£¬ÀıÈç£ºsuperlists-staging.sunplus-prof.com
+* å‚è€ƒ gunicorn-upstart.template.conf
+* æŠŠ SITENAME æ¢æˆæ‰€éœ€çš„åŸŸåï¼Œä¾‹å¦‚ï¼šsuperlists-staging.sunplus-prof.com
 
-## ÎÄ¼ş¼Ğ½á¹¹£º
+## æ–‡ä»¶å¤¹ç»“æ„ï¼š
 
-¼ÙÉèÓĞÓÃ»§ÕË»§£¬Home Ä¿Â¼Îª /home/username
+å‡è®¾æœ‰ç”¨æˆ·è´¦æˆ·ï¼ŒHome ç›®å½•ä¸º /home/username
 
 /home/username
-©¸©¤©¤ sites
-    ©¸©¤©¤ SITENAME
-        ©À©¤©¤ database
-        ©À©¤©¤ source
-        ©À©¤©¤ static
-        ©¸©¤©¤ virtualenv
+â””â”€â”€ sites
+    â””â”€â”€ SITENAME
+        â”œâ”€â”€ database
+        â”œâ”€â”€ source
+        â”œâ”€â”€ static
+        â””â”€â”€ virtualenv
 
 
 
