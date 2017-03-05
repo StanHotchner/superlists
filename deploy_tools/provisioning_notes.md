@@ -10,8 +10,8 @@ pip
 virtualenv
 
 Ubuntu 中的安装命令：
-sudo apt-get install nginx git python3 python3-pip
-sudo pip3 install virtualenv
+* sudo apt-get install nginx git python3 python3-pip
+* sudo pip3 install virtualenv
 
 ## 配置nginx 虚拟主机:
 
