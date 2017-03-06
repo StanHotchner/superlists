@@ -7,8 +7,7 @@ from selenium.webdriver.common.keys import Keys
 import unittest
 import time
 
-class NewVisitorTest(StaticLiveServerTestCase):
-    
+class FunctionalTest(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         for arg in sys.argv:
@@ -28,29 +27,15 @@ class NewVisitorTest(StaticLiveServerTestCase):
 
     def tearDown(self):
         self.browser.quit()
-        
+
     def check_for_row_in_list_table(self, row_text):
         
         table = self.browser.find_element_by_id('id_list_table')
         rows = table.find_elements_by_tag_name('tr')
         self.assertIn(row_text, [row.text for row in rows])
-    
-    def test_layout_and_styling(self):
-        #伊迪丝访问首页
-        self.browser.get(self.server_url)
-        self.browser.set_window_size(1024, 768)
-        
-        #她看到输入框完美的居中显示
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        self.assertAlmostEqual(inputbox.location['x'] + inputbox.size['width'] /2 , 512, delta = 5)
-        
-        #她新建了一个清单，看到输入框仍然完美居中
-        inputbox.send_keys('testing')
-        inputbox.send_keys(Keys.ENTER)
-        time.sleep(2)
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        self.assertAlmostEqual(inputbox.location['x'] + inputbox.size['width'] /2 , 512, delta = 5)
-        
+
+
+class NewVisitorTest(FunctionalTest):
     def test_can_start_a_list_and_retrive_it_later(self): #可以开启一个列表并且之后可以重新读取
         #伊迪丝听说有一个很酷的在线代办事项应用
         #他去看了这个应用的首页（他应该要能正常的开启页面）
@@ -119,6 +104,40 @@ class NewVisitorTest(StaticLiveServerTestCase):
         page_text = self.browser.find_element_by_tag_name('body').text
         self.assertNotIn('Buy peacock feathers', page_text)
         self.assertIn('Buy milk', page_text)
+    
+class LayoutAndStyingTest(FunctionalTest):
+    def test_layout_and_styling(self):
+        #伊迪丝访问首页
+        self.browser.get(self.server_url)
+        self.browser.set_window_size(1024, 768)
+        
+        #她看到输入框完美的居中显示
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        self.assertAlmostEqual(inputbox.location['x'] + inputbox.size['width'] /2 , 512, delta = 5)
+        
+        #她新建了一个清单，看到输入框仍然完美居中
+        inputbox.send_keys('testing')
+        inputbox.send_keys(Keys.ENTER)
+        time.sleep(2)
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        self.assertAlmostEqual(inputbox.location['x'] + inputbox.size['width'] /2 , 512, delta = 5)
+
+class ItemValidationTest(FunctionalTest):
+    def test_cannot_add_empty_list_items(self):
+        # 伊迪丝访问首页，他不小心提交了一个空的待办事项。输入框没有输入内容，他就按下了回车
+        
+        # 首页刷新了，显示一个错误消息 - “提交的待办事项不能为空”
+        
+        # 她输入了一些文字，然后再次提交。这次没有问题了
+        
+        # 她有点调皮，又提交了一个空的待办事项
+        
+        # 在清单页面他看到了一个相同的错误消息
+        
+        # 输入一些问题后再次提交就没有问题了
+        pass
+        
+        
         
         #self.fail('Finish the test with fail!')
         
