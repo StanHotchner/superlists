@@ -1,7 +1,15 @@
 from django.test import TestCase
 from lists.models import Item, List
+from django.core.exceptions import ValidationError
 
 class ListAndItemModelTest(TestCase):
+    def test_cannot_save_empty_list_items(self):
+        list_ = List.objects.create() # 创建一个待办事项清单，取回 id 号 / create() == 先创建一笔数据的实例，然后再调用 .save()
+        item = Item(list = list_, text = '') # 创建一笔空字符的待办事项
+        with self.assertRaises(ValidationError):
+            item.save()
+            item.full_clean()
+    
     # ---- 测试能否正确的保存数据到数据库并且读回 ----
     def test_saving_and_retrieving_items(self):
         list_ = List()

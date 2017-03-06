@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.http import HttpRequest
 from lists.models import Item, List
 from lists.views import home_page
+from django.utils.html import escape
 
 class HomePageTest(TestCase):
 
@@ -44,6 +45,27 @@ class HomePageTest(TestCase):
      '''
         
 class ListViewTest(TestCase):
+    def test_validation_errors_are_sent_back_to_home_page_template(self):
+        # 使用http client 连接站点，以post 方式提交一个空的待办事项
+        response = self.client.post('/lists/new', data = {'item_text':''})
+        
+        # 断言站点应该回应 http 200 而不是转跳 http 302 (根据设计，提交后要转跳到个人清单)
+        self.assertEqual(response.status_code, 200)
+        
+        # 断言站点应该回应 home page（因为提交一个空的代办事项是不对的，所以留在首页）
+        self.assertTemplateUsed(response, 'home.html')
+        
+        # 断言页面上应该出现错误信息
+        expected_error = escape("You can't have an empty list item")
+        self.assertContains(response, expected_error)
+    
+    def test_invalid_list_items_arent_saved(self):
+        # 使用http client 连接站点，以post 方式提交一个空的待办事项
+        response = self.client.post('/lists/new', data = {'item_text':''}) 
+        
+        self.assertEqual(List.objects.count(), 0)
+        self.assertEqual(Item.objects.count(), 0)
+    
     def test_use_list_template(self):
         list_ = List.objects.create()
         response = self.client.get('/lists/%d/' % (list_.id,)) #用测试客户端，真的用http client 去测试 
