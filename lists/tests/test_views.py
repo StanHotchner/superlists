@@ -4,46 +4,19 @@ from django.http import HttpRequest
 from lists.models import Item, List
 from lists.views import home_page
 from django.utils.html import escape
+from lists.forms import ItemForm
+from django.template.loader import render_to_string
 
 class HomePageTest(TestCase):
-
-    # ---- 测试根 URL 是否能够正常解析到对应的 view ----
-    def test_root_url_resolves_to_home_page_view(self):
-        found = resolve('/')
-        self.assertEqual(found.func, home_page)
+    def test_home_page_renders_home_template(self):
+        response = self.client.get('/')
+        self.assertTemplateUsed(response, 'home.html')
         
-    # ---- 测试能否返回正确的 Home 页面 ----
+    def test_home_page_uses_item_form(self): # 检查home page 是否使用了 ItemForm
+        response = self.client.get('/')
+        print(response.content.decode())
+        self.assertIsInstance(response.context['form'], ItemForm)
     
-    def test_home_page_return_currect_html(self):
-        request = HttpRequest() #模拟客户端发送一个Http请求
-        response = home_page(request) #把客户端 http 请求交给 home_page() 来处理
-        
-        content = response.content.strip()
-        #self.assertTrue(content.startswith(b'<html>'))#预期回应的html 的开头要是 <html>
-        self.assertIn(b'<title>To-Do lists</title>', content)
-        self.assertTrue(content.endswith(b'</html>')) 
-     
-        
-    # ---- 测试如果只是浏览首页的时候不需要保存空值到数据库 ----   
-    '''
-    def test_home_page_only_saves_items_when_nessary(self):
-        request = HttpRequest() #模拟客户端发送一个Http请求
-        response = home_page(request) #把客户端 http 请求交给 home_page() 来处理
-        self.assertEqual(Item.objects.count(), 0) # 断言数据表 lists_item 应该是空的，因为没有提交任何数据
-    '''
-    # ---- 测试首页能否显示所有的条目 ----
-    '''
-    def test_home_page_displays_all_list_items(self):
-        Item.objects.create(text='itemey 1')
-        Item.objects.create(text='itemey 2')
-        
-        request = HttpRequest() #模拟客户端发送一个Http请求
-        response = home_page(request) #把客户端 http 请求交给 home_page() 来处理
-        
-        self.assertIn('itemey 1', response.content.decode())
-        self.assertIn('itemey 2', response.content.decode())
-     '''
-        
 class ListViewTest(TestCase):
     def test_validation_errors_end_up_on_list_page(self):
         list_ = List.objects.create()  #增加清单
