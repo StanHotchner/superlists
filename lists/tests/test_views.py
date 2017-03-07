@@ -45,6 +45,21 @@ class HomePageTest(TestCase):
      '''
         
 class ListViewTest(TestCase):
+    def test_validation_errors_end_up_on_list_page(self):
+        list_ = List.objects.create()  #增加清单
+        
+        response = self.client.post('/lists/%d/' % (list_.id), data = {'item_text':''})
+        
+        # 断言站点应该回应 http 200 而不是转跳 http 302 (根据设计，提交后要转跳到个人清单)
+        self.assertEqual(response.status_code, 200)
+        
+        # 断言站点应该继续使用 list.html 模板
+        self.assertTemplateUsed(response, 'list.html')
+        
+        # 断言页面上应该出现错误信息
+        expected_error = escape("You can't have an empty list item")
+        self.assertContains(response, expected_error)
+        
     def test_validation_errors_are_sent_back_to_home_page_template(self):
         # 使用http client 连接站点，以post 方式提交一个空的待办事项
         response = self.client.post('/lists/new', data = {'item_text':''})
@@ -111,6 +126,8 @@ class ListViewTest(TestCase):
         response = self.client.post('/lists/%d/' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
         
         self.assertRedirects(response, '/lists/%d/' % (correct_list.id,)) #断言提交后应该要转跳
+        
+    
 
 class NewListTest(TestCase):
     # ---- 测试 home_page 视图在 POST 时，是否能返回正确 html 的内容 ----
