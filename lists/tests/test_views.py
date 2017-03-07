@@ -93,7 +93,25 @@ class ListViewTest(TestCase):
         correct_list = List.objects.create()
         response = self.client.get('/lists/%d/' % (correct_list.id,))
         self.assertEqual(response.context['list'], correct_list)
+    
+    def test_can_save_a_POST_request_to_an_existing_list(self):
+        other_list = List.objects.create()    #增加第一个清单
+        correct_list = List.objects.create()  #增加第二个清单
         
+        self.client.post('/lists/%d/' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
+        
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, 'A new item for an existing list')
+        self.assertEqual(new_item.list, correct_list)
+        
+    def test_redirects_to_list_view(self):
+        other_llist = List.objects.create()    #增加第一个清单
+        correct_list = List.objects.create()  #增加第二个清单
+        response = self.client.post('/lists/%d/' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
+        
+        self.assertRedirects(response, '/lists/%d/' % (correct_list.id,)) #断言提交后应该要转跳
+
 class NewListTest(TestCase):
     # ---- 测试 home_page 视图在 POST 时，是否能返回正确 html 的内容 ----
     def test_page_can_save_a_POST_request(self): 
@@ -109,7 +127,8 @@ class NewListTest(TestCase):
 
         new_list = List.objects.first()
         self.assertRedirects(response, '/lists/%d/' % (new_list.id,)) #断言提交后应该要转跳
-        
+'''    
+class NewItemTest(TestCase):    
     # ---- 测试能否在一个已经存在的 List 中增加条目 (观察数据库)----
     def test_can_save_a_POST_request_to_an_existing_list(self):
         other_list = List.objects.create()    #增加第一个清单
@@ -128,6 +147,7 @@ class NewListTest(TestCase):
         response = self.client.post('/lists/%d/add_item' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
         
         self.assertRedirects(response, '/lists/%d/' % (correct_list.id,)) #断言提交后应该要转跳
+'''
         
 class empty(object):
     pass        
