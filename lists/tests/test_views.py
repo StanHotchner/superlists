@@ -4,8 +4,8 @@ from django.http import HttpRequest
 from lists.models import Item, List
 from lists.views import home_page
 from django.utils.html import escape
-from lists.forms import ItemForm
 from django.template.loader import render_to_string
+from lists.forms import ItemForm, EMPTY_LIST_ERROR
 
 class HomePageTest(TestCase):
     def test_home_page_renders_home_template(self):
@@ -14,14 +14,13 @@ class HomePageTest(TestCase):
         
     def test_home_page_uses_item_form(self): # 检查home page 是否使用了 ItemForm
         response = self.client.get('/')
-        print(response.content.decode())
         self.assertIsInstance(response.context['form'], ItemForm)
     
 class ListViewTest(TestCase):
     def test_validation_errors_end_up_on_list_page(self):
         list_ = List.objects.create()  #增加清单
         
-        response = self.client.post('/lists/%d/' % (list_.id), data = {'item_text':''})
+        response = self.client.post('/lists/%d/' % (list_.id), data = {'text':''})
         
         # 断言站点应该回应 http 200 而不是转跳 http 302 (根据设计，提交后要转跳到个人清单)
         self.assertEqual(response.status_code, 200)
@@ -32,24 +31,27 @@ class ListViewTest(TestCase):
         # 断言页面上应该出现错误信息
         expected_error = escape("You can't have an empty list item")
         self.assertContains(response, expected_error)
-        
-    def test_validation_errors_are_sent_back_to_home_page_template(self):
-        # 使用http client 连接站点，以post 方式提交一个空的待办事项
-        response = self.client.post('/lists/new', data = {'item_text':''})
-        
-        # 断言站点应该回应 http 200 而不是转跳 http 302 (根据设计，提交后要转跳到个人清单)
+    
+    # 如果验证有错误，应该渲染首页模版并且返回200响应
+    def test_for_invalid_input_renders_home_page_template(self):
+        response = self.client.post('/lists/new', data = {'text':''})#故意给空白值
+        self.assertTemplateUsed(response, 'home.html')
         self.assertEqual(response.status_code, 200)
         
-        # 断言站点应该回应 home page（因为提交一个空的代办事项是不对的，所以留在首页）
-        self.assertTemplateUsed(response, 'home.html')
+    # 如果验证有错误，响应中应该包含错误消息
+    def test_validation_errors_are_shown_on_home_page(self):
+        response = self.client.post('/lists/new', data = {'text':''})
+        self.assertContains(response, escape(EMPTY_LIST_ERROR))
         
-        # 断言页面上应该出现错误信息
-        expected_error = escape("You can't have an empty list item")
-        self.assertContains(response, expected_error)
-    
+    # 如果验证有错误，应该把表单对象传入模版
+    def test_for_invalid_input_passes_form_to_template(self):
+        response = self.client.post('/lists/new', data = {'text':''})
+        self.assertIsInstance(response.context['form'], ItemForm)
+        
+        
     def test_invalid_list_items_arent_saved(self):
         # 使用http client 连接站点，以post 方式提交一个空的待办事项
-        response = self.client.post('/lists/new', data = {'item_text':''}) 
+        response = self.client.post('/lists/new', data = {'text':''}) 
         
         self.assertEqual(List.objects.count(), 0)
         self.assertEqual(Item.objects.count(), 0)
@@ -86,7 +88,7 @@ class ListViewTest(TestCase):
         other_list = List.objects.create()    #增加第一个清单
         correct_list = List.objects.create()  #增加第二个清单
         
-        self.client.post('/lists/%d/' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
+        self.client.post('/lists/%d/' % (correct_list.id), data = {'text':'A new item for an existing list'})
         
         self.assertEqual(Item.objects.count(), 1)
         new_item = Item.objects.first()
@@ -96,16 +98,14 @@ class ListViewTest(TestCase):
     def test_redirects_to_list_view(self):
         other_llist = List.objects.create()    #增加第一个清单
         correct_list = List.objects.create()  #增加第二个清单
-        response = self.client.post('/lists/%d/' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
+        response = self.client.post('/lists/%d/' % (correct_list.id), data = {'text':'A new item for an existing list'})
         
         self.assertRedirects(response, '/lists/%d/' % (correct_list.id,)) #断言提交后应该要转跳
         
-    
-
 class NewListTest(TestCase):
     # ---- 测试 home_page 视图在 POST 时，是否能返回正确 html 的内容 ----
     def test_page_can_save_a_POST_request(self): 
-        self.client.post('/lists/new', data = {'item_text':'A new list item'})
+        self.client.post('/lists/new', data = {'text':'A new list item'})
         
         self.assertEqual(Item.objects.count(), 1) # 断言数据表lists_item 中应该已经有 1 笔刚刚提交的数据了
         new_item = Item.objects.first() # 取回数据库中的第一笔
@@ -113,31 +113,11 @@ class NewListTest(TestCase):
         
     # ---- 测试 POST 时候能否 Redirect （PRG Patten）----
     def test_home_page_redirects_after_POST(self):
-        response = self.client.post('/lists/new', data = {'item_text':'A new list item'})
+        response = self.client.post('/lists/new', data = {'text':'A new list item'})
 
         new_list = List.objects.first()
         self.assertRedirects(response, '/lists/%d/' % (new_list.id,)) #断言提交后应该要转跳
-'''    
-class NewItemTest(TestCase):    
-    # ---- 测试能否在一个已经存在的 List 中增加条目 (观察数据库)----
-    def test_can_save_a_POST_request_to_an_existing_list(self):
-        other_list = List.objects.create()    #增加第一个清单
-        correct_list = List.objects.create()  #增加第二个清单
-        
-        self.client.post('/lists/%d/add_item' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
-        
-        self.assertEqual(Item.objects.count(), 1)
-        new_item = Item.objects.first()
-        self.assertEqual(new_item.text, 'A new item for an existing list')
-        self.assertEqual(new_item.list, correct_list)
-        
-    def test_redirects_to_list_view(self):
-        other_llist = List.objects.create()    #增加第一个清单
-        correct_list = List.objects.create()  #增加第二个清单
-        response = self.client.post('/lists/%d/add_item' % (correct_list.id), data = {'item_text':'A new item for an existing list'})
-        
-        self.assertRedirects(response, '/lists/%d/' % (correct_list.id,)) #断言提交后应该要转跳
-'''
+
         
 class empty(object):
     pass        
