@@ -2,20 +2,14 @@
 from django import forms
 from lists.models import Item
 
-'''
-class ItemForm(forms.Form):
-    text = forms.CharField(
-        widget=forms.fields.TextInput(
-        attrs={
-            'placeholder':'Enter a to-do item',
-            'class':'form-control input-lg',
-        }),)
-    #pass
-'''
-
 EMPTY_LIST_ERROR = "You can't have an empty list item"
 
 class ItemForm(forms.models.ModelForm):
+
+    def save(self, list_):
+        self.instance.list = list_
+        return super().save()
+   
     class Meta:
         model = Item
         fields = ('text',)

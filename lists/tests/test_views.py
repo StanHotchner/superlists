@@ -17,6 +17,32 @@ class HomePageTest(TestCase):
         self.assertIsInstance(response.context['form'], ItemForm)
     
 class ListViewTest(TestCase):
+    # 产生不合法输入的提交
+    def post_invalid_input(self):
+        list_ = List.objects.create()
+        return self.client.post('/lists/%d/' % (list_.id), data = {'text':''})
+    
+    def test_for_invaild_input_nothing_saved_to_db(self): # 不合法输入产生时，不会有任何数据保存到数据库中
+        self.post_invalid_input()
+        self.assertEqual(Item.objects.count(), 0)
+        
+    # 不合法输入产生时，要渲染 list.html 模版
+    def test_for_invalid_input_renders_list_template(self):
+        response = self.post_invalid_input()
+        self.assertTemplateUsed(response, 'list.html')
+        self.assertEqual(response.status_code, 200)
+        
+    # 不合法输入产生时，要传递表单（form）给模板
+    def test_for_invalid_input_passes_form_to_template(self):
+        response = self.post_invalid_input()
+        self.assertIsInstance(response.context['form'], ItemForm)
+        
+    # 不合法输入产生时，页面要显示错误信息
+    def test_for_invalid_input_shows_error_on_page(self):
+        response = self.post_invalid_input()
+        self.assertContains(response, escape(EMPTY_LIST_ERROR))
+
+    '''    
     def test_validation_errors_end_up_on_list_page(self):
         list_ = List.objects.create()  #增加清单
         
@@ -31,31 +57,8 @@ class ListViewTest(TestCase):
         # 断言页面上应该出现错误信息
         expected_error = escape("You can't have an empty list item")
         self.assertContains(response, expected_error)
-    
-    # 如果验证有错误，应该渲染首页模版并且返回200响应
-    def test_for_invalid_input_renders_home_page_template(self):
-        response = self.client.post('/lists/new', data = {'text':''})#故意给空白值
-        self.assertTemplateUsed(response, 'home.html')
-        self.assertEqual(response.status_code, 200)
-        
-    # 如果验证有错误，响应中应该包含错误消息
-    def test_validation_errors_are_shown_on_home_page(self):
-        response = self.client.post('/lists/new', data = {'text':''})
-        self.assertContains(response, escape(EMPTY_LIST_ERROR))
-        
-    # 如果验证有错误，应该把表单对象传入模版
-    def test_for_invalid_input_passes_form_to_template(self):
-        response = self.client.post('/lists/new', data = {'text':''})
-        self.assertIsInstance(response.context['form'], ItemForm)
-        
-        
-    def test_invalid_list_items_arent_saved(self):
-        # 使用http client 连接站点，以post 方式提交一个空的待办事项
-        response = self.client.post('/lists/new', data = {'text':''}) 
-        
-        self.assertEqual(List.objects.count(), 0)
-        self.assertEqual(Item.objects.count(), 0)
-    
+    '''
+   
     def test_use_list_template(self):
         list_ = List.objects.create()
         response = self.client.get('/lists/%d/' % (list_.id,)) #用测试客户端，真的用http client 去测试 
@@ -103,6 +106,30 @@ class ListViewTest(TestCase):
         self.assertRedirects(response, '/lists/%d/' % (correct_list.id,)) #断言提交后应该要转跳
         
 class NewListTest(TestCase):
+
+    # 如果验证有错误，应该渲染首页模版并且返回200响应
+    def test_for_invalid_input_renders_home_page_template(self):
+        response = self.client.post('/lists/new', data = {'text':''})#故意给空白值
+        self.assertTemplateUsed(response, 'home.html')
+        self.assertEqual(response.status_code, 200)
+        
+    # 如果验证有错误，响应中应该包含错误消息
+    def test_validation_errors_are_shown_on_home_page(self):
+        response = self.client.post('/lists/new', data = {'text':''})
+        self.assertContains(response, escape(EMPTY_LIST_ERROR))
+        
+    # 如果验证有错误，应该把表单对象传入模版
+    def test_for_invalid_input_passes_form_to_template(self):
+        response = self.client.post('/lists/new', data = {'text':''})
+        self.assertIsInstance(response.context['form'], ItemForm)
+        
+    # 如果验证有错误，数据库不会保存任何东西
+    def test_invalid_list_items_arent_saved(self):
+        response = self.client.post('/lists/new', data = {'text':''}) 
+        
+        self.assertEqual(List.objects.count(), 0)
+        self.assertEqual(Item.objects.count(), 0)
+
     # ---- 测试 home_page 视图在 POST 时，是否能返回正确 html 的内容 ----
     def test_page_can_save_a_POST_request(self): 
         self.client.post('/lists/new', data = {'text':'A new list item'})
