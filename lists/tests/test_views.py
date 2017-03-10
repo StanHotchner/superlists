@@ -6,6 +6,7 @@ from lists.views import home_page
 from django.utils.html import escape
 from django.template.loader import render_to_string
 from lists.forms import ItemForm, EMPTY_LIST_ERROR
+from unittest import skip
 
 class HomePageTest(TestCase):
     def test_home_page_renders_home_template(self):
@@ -41,24 +42,17 @@ class ListViewTest(TestCase):
     def test_for_invalid_input_shows_error_on_page(self):
         response = self.post_invalid_input()
         self.assertContains(response, escape(EMPTY_LIST_ERROR))
-
-    '''    
-    def test_validation_errors_end_up_on_list_page(self):
-        list_ = List.objects.create()  #增加清单
+    @skip
+    def test_duplicate_item_validation_errors_end_up_on_lists_page(self):
+        list1 = List.objects.create() 
+        item1 = Item.objects.create(list = list1, text = 'abc123')
+        response = self.client.post('/lists/%d/' % (list1.id), data = {'text':item1.text})
         
-        response = self.client.post('/lists/%d/' % (list_.id), data = {'text':''})
-        
-        # 断言站点应该回应 http 200 而不是转跳 http 302 (根据设计，提交后要转跳到个人清单)
-        self.assertEqual(response.status_code, 200)
-        
-        # 断言站点应该继续使用 list.html 模板
-        self.assertTemplateUsed(response, 'list.html')
-        
-        # 断言页面上应该出现错误信息
-        expected_error = escape("You can't have an empty list item")
+        expected_error = escape(DUPLICATE_ITEM_ERROR)
         self.assertContains(response, expected_error)
-    '''
-   
+        self.assertTemplateUsed(response, 'list.html')
+        self.assertEqual(Item.objects.all().count(), 1)
+ 
     def test_use_list_template(self):
         list_ = List.objects.create()
         response = self.client.get('/lists/%d/' % (list_.id,)) #用测试客户端，真的用http client 去测试 
