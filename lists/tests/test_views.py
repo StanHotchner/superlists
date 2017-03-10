@@ -5,7 +5,7 @@ from lists.models import Item, List
 from lists.views import home_page
 from django.utils.html import escape
 from django.template.loader import render_to_string
-from lists.forms import ItemForm, EMPTY_LIST_ERROR
+from lists.forms import ItemForm, EMPTY_LIST_ERROR, DUPLICATE_ITEM_ERROR, ExistingListItemForm
 from unittest import skip
 
 class HomePageTest(TestCase):
@@ -23,6 +23,12 @@ class ListViewTest(TestCase):
         list_ = List.objects.create()
         return self.client.post('/lists/%d/' % (list_.id), data = {'text':''})
     
+    def test_display_item_form(self):
+        list_ = List.objects.create()
+        response = self.client.get('/lists/%d/' % (list_.id))
+        self.assertIsInstance(response.context['form'], ExistingListItemForm)
+        self.assertContains(response, 'name="text"')
+        
     def test_for_invaild_input_nothing_saved_to_db(self): # 不合法输入产生时，不会有任何数据保存到数据库中
         self.post_invalid_input()
         self.assertEqual(Item.objects.count(), 0)
@@ -33,20 +39,20 @@ class ListViewTest(TestCase):
         self.assertTemplateUsed(response, 'list.html')
         self.assertEqual(response.status_code, 200)
         
-    # 不合法输入产生时，要传递表单（form）给模板
+    # !!!!! 不合法输入产生时，要传递表单（form）给模板
     def test_for_invalid_input_passes_form_to_template(self):
         response = self.post_invalid_input()
-        self.assertIsInstance(response.context['form'], ItemForm)
+        self.assertIsInstance(response.context['form'], ExistingListItemForm)
         
     # 不合法输入产生时，页面要显示错误信息
     def test_for_invalid_input_shows_error_on_page(self):
         response = self.post_invalid_input()
         self.assertContains(response, escape(EMPTY_LIST_ERROR))
-    @skip
+    
     def test_duplicate_item_validation_errors_end_up_on_lists_page(self):
         list1 = List.objects.create() 
         item1 = Item.objects.create(list = list1, text = 'abc123')
-        response = self.client.post('/lists/%d/' % (list1.id), data = {'text':item1.text})
+        response = self.client.post('/lists/%d/' % (list1.id), data = {'text':'abc123'})
         
         expected_error = escape(DUPLICATE_ITEM_ERROR)
         self.assertContains(response, expected_error)

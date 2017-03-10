@@ -8,8 +8,8 @@ DUPLICATE_ITEM_ERROR = "You've already got this in your list"
 
 class ItemForm(forms.models.ModelForm):
 
-    def save(self, list_):
-        self.instance.list = list_
+    def save(self, for_list):
+        self.instance.list = for_list
         return super().save()
    
     class Meta:
@@ -31,6 +31,9 @@ class ExistingListItemForm(ItemForm):
         super().__init__(*args, **kwargs)
         self.instance.list = for_list
     
+    def save(self):
+        return forms.models.ModelForm.save(self)
+        
     def validate_unique(self):
         try:
             self.instance.validate_unique()
