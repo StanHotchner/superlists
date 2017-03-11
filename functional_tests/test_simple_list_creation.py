@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#python3 manage.py test functional_tests.test_simple_list_creation.NewVisitorTest.test_can_start_a_list_and_retrive_it_later
 from .base import FunctionalTest
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys

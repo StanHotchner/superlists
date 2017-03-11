@@ -26,8 +26,8 @@ class FunctionalTest(StaticLiveServerTestCase):
         self.browser.implicitly_wait(5)
 
     def tearDown(self):
-        #self.browser.quit()
-        pass
+        self.browser.quit()
+        #pass
         
     def check_for_row_in_list_table(self, row_text):
         
