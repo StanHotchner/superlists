@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from fabric.contrib.files import append, exists, sed
 from fabric.api import env, local, run
+import random
 
 REPO_URL = 'https://github.com/StanHotchner/superlists.git'
 
@@ -9,7 +10,7 @@ def _create_directory_structure_if_nessary(site_folder): # 创建目录结构
         run('mkdir -p %s/%s' % (site_folder, subfolder))
         
 def _get_lastest_source(source_folder):
-    if exists(source_folder + '.git'): # 检查source_folder 是不是一个 git 仓库
+    if exists(source_folder + '/.git'): # 检查source_folder 是不是一个 git 仓库
         run('cd %s && git fetch' % (source_folder,)) # 如果是的话就从github 上拉取最新的提交
     else:
         run('git clone %s %s' % (REPO_URL, source_folder))
@@ -38,14 +39,17 @@ def _update_static_files(source_folder):
     run('cd %s && ../virtualenv/bin/python3 manage.py collectstatic --noinput' % (source_folder,))
     
 def _update_database(source_folder):
-    run('cd %s && ../virtualenv/bin/python3 manage.py migate --noinput' % (source_folder, ))
+    run('cd %s && ../virtualenv/bin/python3 manage.py migrate --noinput' % (source_folder, ))
 
 def deploy():
-    site_folder = '/home/%s/sites/%s/' % (env.user, env.hosts)
-    source_foler = site_folder + '/source'
+    site_folder = '/home/%s/sites/%s' % (env.user, env.host)
+    #print(site_folder)
+    
+    source_folder = site_folder + '/source'
     _create_directory_structure_if_nessary(site_folder)
-    _get_lastest_source(source_foler)
-    _update_settings(source_foler, env.host)
-    _update_virtualenv(source_foler)
+    _get_lastest_source(source_folder)
+    _update_settings(source_folder, env.host)
+    _update_virtualenv(source_folder)
     _update_static_files(source_folder)
     _update_database(source_folder)
+    
