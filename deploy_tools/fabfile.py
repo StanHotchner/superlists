@@ -6,7 +6,7 @@ import random
 REPO_URL = 'https://github.com/StanHotchner/superlists.git'
 
 def _create_directory_structure_if_nessary(site_folder): # 创建目录结构
-    for subfolder in ('daabase', 'static', 'virtualenv', 'source'):
+    for subfolder in ('database', 'static', 'virtualenv', 'source'):
         run('mkdir -p %s/%s' % (site_folder, subfolder))
         
 def _get_lastest_source(source_folder):
